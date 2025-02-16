@@ -1,22 +1,44 @@
-import { Job } from 'bullmq';
 import { Injectable } from '@nestjs/common';
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Job, Worker } from 'bullmq';
 
 import { RESOURCES_QUEUE } from '../resources.constants';
 import { ResourcesService } from '../resources.service';
+import { ConfigService } from '@nestjs/config';
 
-@Processor(RESOURCES_QUEUE)
 @Injectable()
-export class ResourcesConsumer extends WorkerHost {
-  constructor(private readonly resourceService: ResourcesService) {
-    super();
-  }
+export class ResourcesConsumer {
+  private worker: Worker;
 
-  async process(job: Job) {
-    console.log('Start of job', job.id);
+  constructor(
+    private readonly resourceService: ResourcesService,
+    private readonly configService: ConfigService,
+  ) {
+    const redisHost: string = this.configService.get<string>('REDIS_HOST')!;
+    const redisPort: number = +this.configService.get<number>('REDIS_PORT')!;
+    const concurrency: number = +this.configService.get<number>(
+      'REDIS_WORKER_CONCURRENCY',
+    )!;
 
-    await this.resourceService.processJob(job);
+    this.worker = new Worker(
+      RESOURCES_QUEUE,
+      async (job: Job) => {
+        console.log('Start of job', job.id);
 
-    console.log('Finish of job:', job.id);
+        await this.resourceService.processJob(job);
+
+        console.log('Finish of job:', job.id);
+      },
+      {
+        concurrency: concurrency,
+        connection: {
+          host: redisHost,
+          port: redisPort,
+        },
+      },
+    );
+
+    this.worker.on('failed', (job, error) => {
+      console.error(`Job ${job?.name} failed with error:`, error);
+    });
   }
 }
