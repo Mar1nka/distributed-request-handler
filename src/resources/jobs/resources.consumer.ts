@@ -1,7 +1,8 @@
 import { Job } from 'bullmq';
-import { RESOURCES_QUEUE } from '../resources.constants';
 import { Injectable } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
+
+import { RESOURCES_QUEUE } from '../resources.constants';
 import { ResourcesService } from '../resources.service';
 
 @Processor(RESOURCES_QUEUE)

@@ -1,6 +1,7 @@
 import { IsOptional, IsEnum, IsInt, Min } from 'class-validator';
-import { ResourceStatus } from '../resources.enum';
 import { Transform } from 'class-transformer';
+
+import { ResourceStatus } from '../resources.enum';
 
 export class GetResourcesRequestDto {
   @IsOptional()

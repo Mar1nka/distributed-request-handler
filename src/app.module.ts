@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ResourcesModule } from './resources/resources.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BullModule } from '@nestjs/bullmq';
+
+import { ResourcesModule } from './resources/resources.module';
 
 @Module({
   imports: [

@@ -6,6 +6,7 @@ import {
   Query,
   ValidationPipe,
 } from '@nestjs/common';
+
 import { ResourcesService } from './resources.service';
 import { CreateResourceRequestDto } from './dto/create-resource-request.dto';
 import { GetResourcesRequestDto } from './dto/get-resources-request.dto';
@@ -17,7 +18,7 @@ export class ResourcesController {
   constructor(private readonly requestsService: ResourcesService) {}
 
   @Post()
-  async createResourceRequests(
+  async createResource(
     @Body(new ValidationPipe({ transform: true, whitelist: true }))
     createResourceRequestDto: CreateResourceRequestDto,
   ): Promise<CreateResourceResponseDto> {
@@ -25,10 +26,10 @@ export class ResourcesController {
   }
 
   @Get()
-  async getResourceRequestsList(
+  async getResourcesList(
     @Query(new ValidationPipe({ transform: true }))
     query: GetResourcesRequestDto,
   ): Promise<GetResourcesResponseDto> {
-    return this.requestsService.getResourceRequestsList(query);
+    return this.requestsService.getResourcesList(query);
   }
 }

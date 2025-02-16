@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { BullModule } from '@nestjs/bullmq';
+import { HttpModule } from '@nestjs/axios';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+
 import { ResourcesController } from './resources.controller';
 import { ResourcesService } from './resources.service';
 import { ResourceSchema } from './schemas/resource.schema';
-import { MongooseModule } from '@nestjs/mongoose';
 import { ResourcesConsumer } from './jobs/resources.consumer';
-import { BullModule } from '@nestjs/bullmq';
 import {
   RESOURCES_DB_COLLECTION_NAME,
   RESOURCES_QUEUE,
 } from './resources.constants';
-import { HttpModule } from '@nestjs/axios';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [

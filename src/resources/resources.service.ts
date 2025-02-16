@@ -1,20 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Job, Queue } from 'bullmq';
+import { firstValueFrom } from 'rxjs';
+import { AxiosResponse } from 'axios';
+import { HttpService } from '@nestjs/axios';
+
 import { Resource } from './schemas/resource.schema';
 import { CreateResourceRequestDto } from './dto/create-resource-request.dto';
 import { ResourceStatus } from './resources.enum';
 import { GetResourcesRequestDto } from './dto/get-resources-request.dto';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Job, Queue } from 'bullmq';
 import {
   RESOURCES_DB_COLLECTION_NAME,
   RESOURCES_QUEUE,
 } from './resources.constants';
 import { CreateResourceResponseDto } from './dto/create-resource-response.dto';
-import { firstValueFrom } from 'rxjs';
-import { AxiosResponse } from 'axios';
-import { HttpService } from '@nestjs/axios';
 import { GetResourcesResponseDto } from './dto/get-resources-response.dto';
 
 interface ResourcesFilter {
@@ -54,7 +55,7 @@ export class ResourcesService {
     };
   }
 
-  async getResourceRequestsList(
+  async getResourcesList(
     query: GetResourcesRequestDto,
   ): Promise<GetResourcesResponseDto> {
     const { page = 1, limit = 20, status } = query;
@@ -66,7 +67,7 @@ export class ResourcesService {
       filter.status = status;
     }
 
-    const data = await this.resourceModel
+    const data: Resource[] = await this.resourceModel
       .find(filter)
       .skip(skip)
       .limit(limit)
@@ -85,11 +86,18 @@ export class ResourcesService {
   public async processJob(job: Job) {
     const { url, id } = job.data as { url: string; id: string };
 
-    const first = await this.resourceModel.findByIdAndUpdate(id, {
-      status: ResourceStatus.PROCESSING,
-    });
+    const processingResource: Resource | null =
+      await this.resourceModel.findByIdAndUpdate(id, {
+        status: ResourceStatus.PROCESSING,
+      });
 
-    console.log('first', first);
+    if (!processingResource) {
+      console.error(
+        `Resource with ID ${id} not found. Job processing aborted.`,
+      );
+
+      return;
+    }
 
     try {
       const response = await firstValueFrom<AxiosResponse<any>>(
@@ -110,7 +118,7 @@ export class ResourcesService {
         httpCode = String(error.status);
       }
 
-      const err = await this.updateResource(id, ResourceStatus.ERROR, httpCode);
+      await this.updateResource(id, ResourceStatus.ERROR, httpCode);
     }
   }
 
