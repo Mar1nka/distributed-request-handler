@@ -16,7 +16,10 @@ import {
   RESOURCES_QUEUE,
 } from './resources.constants';
 import { CreateResourceResponseDto } from './dto/create-resource-response.dto';
-import { GetResourcesResponseDto } from './dto/get-resources-response.dto';
+import {
+  GetResourcesResponseDto,
+  ResourcesResponseDto,
+} from './dto/get-resources-response.dto';
 
 interface ResourcesFilter {
   status?: ResourceStatus;
@@ -67,13 +70,23 @@ export class ResourcesService {
       filter.status = status;
     }
 
-    const data: Resource[] = await this.resourceModel
+    const resources: Resource[] = await this.resourceModel
       .find(filter)
       .skip(skip)
       .limit(limit)
+      .sort({ createdAt: -1 })
       .exec();
 
-    const total: number = await this.resourceModel.countDocuments(query);
+    const total: number = await this.resourceModel.countDocuments(filter);
+
+    const data: ResourcesResponseDto[] = resources.map((resource: Resource) => {
+      return {
+        id: resource._id.toString(),
+        url: resource.url,
+        status: resource.status,
+        httpCode: resource.httpCode,
+      };
+    });
 
     return {
       total,
@@ -113,7 +126,7 @@ export class ResourcesService {
       let httpCode: string = 'UNKNOWN';
 
       if (error.code === 'ECONNABORTED') {
-        httpCode = error.code as string;
+        httpCode = 'TIME_OUT';
       } else if (error.status) {
         httpCode = String(error.status);
       }

@@ -1,20 +1,7 @@
-## Project setup
+## Run the Project with Docker
+Simply run the following command to start all necessary services (including MongoDB and Redis):
 
-```bash
-$ npm install
-```
-
-## Docker (to run MongoDB and Redis)
 ```bash
 $ docker-compose up --build
 ```
-
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-```
+This command will automatically build and start all the containers required for the project

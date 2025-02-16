@@ -1,16 +1,13 @@
 services:
-#  app:
-#    build: .
-#    container_name: nest_app
-#    restart: always
-#    ports:
-#      - "${APP_PORT}:${APP_PORT}"
-#    depends_on:
-#      - mongo
-#      - redis
-#    volumes:
-#      - .:/usr/src/app
-#      - /usr/src/app/node_modules
+  app:
+    build: .
+    container_name: nest_app
+    restart: always
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    depends_on:
+      - mongo
+      - redis
 
   mongo:
     image: mongo:latest
