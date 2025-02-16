@@ -20,6 +20,7 @@ import {
   GetResourcesResponseDto,
   ResourcesResponseDto,
 } from './dto/get-resources-response.dto';
+import { ResourcesGateway } from './resources.gateway';
 
 interface ResourcesFilter {
   status?: ResourceStatus;
@@ -33,6 +34,7 @@ export class ResourcesService {
     @InjectQueue(RESOURCES_QUEUE)
     private readonly queue: Queue,
     private readonly httpService: HttpService,
+    private readonly resourcesGateway: ResourcesGateway,
   ) {}
 
   async createResource(
@@ -112,26 +114,37 @@ export class ResourcesService {
       return;
     }
 
+    let status: ResourceStatus = ResourceStatus.PROCESSING;
+    let httpCode: string = 'UNKNOWN';
+
     try {
       const response = await firstValueFrom<AxiosResponse<any>>(
         this.httpService.get(url),
       );
 
-      await this.updateResource(
-        id,
-        ResourceStatus.DONE,
-        response.status.toString(),
-      );
+      status = ResourceStatus.DONE;
+      httpCode = response.status.toString();
     } catch (error: any) {
-      let httpCode: string = 'UNKNOWN';
-
       if (error.code === 'ECONNABORTED') {
         httpCode = 'TIME_OUT';
       } else if (error.status) {
         httpCode = String(error.status);
       }
 
-      await this.updateResource(id, ResourceStatus.ERROR, httpCode);
+      status = ResourceStatus.ERROR;
+    } finally {
+      const updatedResource = await this.updateResource(id, status, httpCode);
+
+      if (updatedResource) {
+        const resourcesResponseDto: ResourcesResponseDto = {
+          id: updatedResource._id.toString(),
+          url: updatedResource.url,
+          status: updatedResource.status,
+          httpCode: updatedResource.httpCode,
+        };
+
+        this.resourcesGateway.notifyClients(resourcesResponseDto);
+      }
     }
   }
 

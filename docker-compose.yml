@@ -5,6 +5,7 @@ services:
     restart: always
     ports:
       - "${APP_PORT}:${APP_PORT}"
+      - "${WEBSOCKET_PORT}:${WEBSOCKET_PORT}"
     depends_on:
       - mongo
       - redis

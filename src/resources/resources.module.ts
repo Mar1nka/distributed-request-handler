@@ -12,6 +12,7 @@ import {
   RESOURCES_DB_COLLECTION_NAME,
   RESOURCES_QUEUE,
 } from './resources.constants';
+import { ResourcesGateway } from './resources.gateway';
 
 @Module({
   imports: [
@@ -36,6 +37,6 @@ import {
     }),
   ],
   controllers: [ResourcesController],
-  providers: [ResourcesService, ResourcesConsumer],
+  providers: [ResourcesService, ResourcesConsumer, ResourcesGateway],
 })
 export class ResourcesModule {}
